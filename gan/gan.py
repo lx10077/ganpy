@@ -2,10 +2,12 @@ import argparse
 import torch
 import os
 import numpy as np
+import torch.nn as nn
+import torchvision.transforms as transforms
 from torch.autograd import Variable
-from gan.gan_nets import Generator, Discriminator
 from torchvision.utils import save_image
-from gan.data import data_loader
+from torch.utils.data import DataLoader
+from torchvision import datasets
 
 
 parser = argparse.ArgumentParser()
@@ -28,6 +30,57 @@ use_cuda = True if torch.cuda.is_available() and args.gpu else False
 # Loss function
 adversarial_loss = torch.nn.BCELoss()
 
+
+class Generator(nn.Module):
+    def __init__(self, latent_dim, img_shape):
+        super(Generator, self).__init__()
+        assert len(img_shape) == 3
+        self.img_shape = img_shape
+        self.latent_dim = latent_dim
+
+        def block(in_feat, out_feat, normalize=True):
+            layers = [nn.Linear(in_feat, out_feat)]
+            if normalize:
+                layers.append(nn.BatchNorm1d(out_feat, 0.8))
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            return layers
+
+        self.model = nn.Sequential(
+            *block(self.latent_dim, 128, normalize=False),
+            *block(128, 256),
+            *block(256, 512),
+            *block(512, 1024),
+            nn.Linear(1024, int(np.prod(img_shape))),
+            nn.Tanh()
+        )
+
+    def forward(self, x):
+        img = self.model(x)
+        img = img.view(-1, self.img_shape[0], self.img_shape[1], self.img_shape[2])
+        return img
+
+
+class Discriminator(nn.Module):
+    def __init__(self, img_shape):
+        super(Discriminator, self).__init__()
+        assert len(img_shape) == 3
+        self.img_shape = img_shape
+
+        self.model = nn.Sequential(
+            nn.Linear(int(np.prod(self.img_shape)), 512),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(512, 256),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(256, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, img):
+        img_flat = img.view(img.size(0), -1)
+        validity = self.model(img_flat)
+        return validity
+
+
 # Initialize generator and discriminator
 img_shape = (args.channels, args.img_size, args.img_size)
 generator = Generator(args.latent_dim, img_shape)
@@ -37,6 +90,22 @@ if use_cuda:
     generator = generator.cuda()
     discriminator = discriminator.cuda()
     adversarial_loss = adversarial_loss.cuda()
+
+
+# Make data dir if data_dir doesn't exist
+os.makedirs('../data/mnist', exist_ok=True)
+
+
+# Configure data loader
+def data_loader(batch_size):
+    dataloader = torch.utils.data.DataLoader(
+        datasets.MNIST('../data/mnist', train=True, download=True,
+                       transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                       ])),
+        batch_size=batch_size, shuffle=True)
+    return dataloader
 
 # Set dataloader
 dataloader = data_loader(args.batch_size * args.k)
