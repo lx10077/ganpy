@@ -11,12 +11,12 @@ how many batches have been used to update the generator. (0 -> 400 -> 800 -> 120
 
 
 <p align="middle">
-    <img src="gan/images/0.png" width="290" />
-    <img src="gan/images/400.png" width="290" />
-    <img src="gan/images/800" width="290" />
+    <img src="images/0.png" width="290" />
+    <img src="images/400.png" width="290" />
+    <img src="images/800" width="290" />
 </p>
 <p align="middle">
-    <img src="gan/images/1200.png" width="290" />
-    <img src="gan/images/2400.png" width="290" />
-    <img src="gan/images/4800" width="290" />
+    <img src="images/1200.png" width="290" />
+    <img src="images/2400.png" width="290" />
+    <img src="images/4800" width="290" />
 </p>
