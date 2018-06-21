@@ -86,9 +86,9 @@ if use_cuda:
     discriminator.cuda()
 
 # Configure data loader
-os.makedirs('../../data/mnist', exist_ok=True)
+os.makedirs('../data/mnist', exist_ok=True)
 dataloader = torch.utils.data.DataLoader(
-    datasets.MNIST('../../data/mnist', train=True, download=True,
+    datasets.MNIST('../data/mnist', train=True, download=True,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -121,10 +121,10 @@ for epoch in range(args.n_epochs):
         fake_imgs = generator(z).detach()
 
         # Adversarial loss
-        loss_D = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
+        d_loss = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
 
         DiscrimUpdater.zero_grad()
-        loss_D.backward()
+        d_loss.backward()
         DiscrimUpdater.step()
 
         # Clip weights of discriminator
@@ -141,15 +141,14 @@ for epoch in range(args.n_epochs):
             # Generate a batch of images
             gen_imgs = generator(z)
             # Adversarial loss
-            loss_G = -torch.mean(discriminator(gen_imgs))
+            g_loss = -torch.mean(discriminator(gen_imgs))
 
             GenUpdater.zero_grad()
-            loss_G.backward()
+            g_loss.backward()
             GenUpdater.step()
 
-            print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, args.n_epochs,
-                                                                              batches_done % len(dataloader), len(dataloader),
-                                                                              loss_D.item(), loss_G.item()))
+            print("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (
+                epoch, args.n_epochs, i, len(dataloader), d_loss.data[0], g_loss.data[0]))
 
         if batches_done % args.sample_interval == 0:
             save_image(gen_imgs.data[:25], 'images/%d.png' % batches_done, nrow=5, normalize=True)
