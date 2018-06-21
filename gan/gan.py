@@ -3,7 +3,7 @@ import torch
 import os
 import numpy as np
 from torch.autograd import Variable
-from gan.nets import Generator, Discriminator
+from gan.gan_nets import Generator, Discriminator
 from torchvision.utils import save_image
 from gan.data import data_loader
 

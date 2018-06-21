@@ -19,5 +19,3 @@ def data_loader(batch_size):
                        ])),
         batch_size=batch_size, shuffle=True)
     return dataloader
-
-
