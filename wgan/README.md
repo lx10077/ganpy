@@ -1,6 +1,11 @@
 # Wasserstein GAN
 [Original paper](https://arxiv.org/abs/1701.07875)
 
+## Algorithm
+<p align="middle">
+    <img src="images/wgan.jpg" width="300" />
+</p>
+
 ## Example
 ```
 python wgan/wgan.py --n_epochs 200 --batch_size 64 --image_size 28 --latent_dim 100 --clip_value 0.01 --n_critic 5

@@ -137,9 +137,13 @@ for epoch in range(args.n_epochs):
             # -----------------
             #  Train Generator
             # -----------------
+            
+            # Sample noise as generator input
+            z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim))))
 
             # Generate a batch of images
             gen_imgs = generator(z)
+
             # Adversarial loss
             g_loss = -torch.mean(discriminator(gen_imgs))
 
