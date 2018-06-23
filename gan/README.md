@@ -1,5 +1,9 @@
 # Generative Adversarial Nets
 [Original paper](https://arxiv.org/abs/1406.2661)
+## Algorithm
+<p align="middle">
+    <img src="images/gan.jpg" />
+</p>
 
 ## Example
 ```
