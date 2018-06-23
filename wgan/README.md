@@ -3,7 +3,7 @@
 
 ## Algorithm
 <p align="middle">
-    <img src="images/wgan.jpg" width="300" />
+    <img src="images/wgan.jpg" />
 </p>
 
 ## Example
