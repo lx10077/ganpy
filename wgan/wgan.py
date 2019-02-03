@@ -6,7 +6,6 @@ import torch.nn as nn
 import numpy as np
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from torch.autograd import Variable
 import torch
 
 
@@ -85,15 +84,24 @@ if use_cuda:
     generator.cuda()
     discriminator.cuda()
 
-# Configure data loader
+# Make data dir if data_dir doesn't exist
 os.makedirs('../data/mnist', exist_ok=True)
-dataloader = torch.utils.data.DataLoader(
-    datasets.MNIST('../data/mnist', train=True, download=True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-                   ])),
-    batch_size=args.batch_size, shuffle=True)
+
+
+# Configure data loader
+def data_loader(batch_size):
+    dataloader = torch.utils.data.DataLoader(
+        datasets.MNIST('../data/mnist', train=True, download=True,
+                       transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                       ])),
+        batch_size=batch_size, shuffle=True)
+    return dataloader
+
+
+# Set dataloader
+dataloader = data_loader(args.batch_size)
 
 # Define optimizers for generator and discriminator
 GenUpdater = torch.optim.RMSprop(generator.parameters(), lr=args.lr)
@@ -108,20 +116,20 @@ for epoch in range(args.n_epochs):
     for i, (imgs, _) in enumerate(dataloader):
 
         # Configure input
-        real_imgs = Variable(imgs.type(Tensor))
+        real_imgs = imgs.type(Tensor)
 
         # ---------------------
         #  Train Discriminator
         # ---------------------
 
         # Sample noise as generator input
-        z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim))))
+        z = Tensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
 
         # Generate a batch of images
         fake_imgs = generator(z).detach()
 
         # Adversarial loss
-        d_loss = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
+        d_loss = -discriminator(real_imgs).mean() + discriminator(fake_imgs).mean()
 
         DiscrimUpdater.zero_grad()
         d_loss.backward()
@@ -139,20 +147,20 @@ for epoch in range(args.n_epochs):
             # -----------------
 
             # Sample noise as generator input
-            z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim))))
+            z = Tensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim)))
 
             # Generate a batch of images
             gen_imgs = generator(z)
 
             # Adversarial loss
-            g_loss = -torch.mean(discriminator(gen_imgs))
+            g_loss = - discriminator(gen_imgs).mean()
 
             GenUpdater.zero_grad()
             g_loss.backward()
             GenUpdater.step()
 
             print("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (
-                epoch, args.n_epochs, i, len(dataloader), d_loss.data[0], g_loss.data[0]))
+                epoch, args.n_epochs, i, len(dataloader), d_loss.item(), g_loss.item()))
 
         if batches_done % args.sample_interval == 0:
             save_image(gen_imgs.data[:25], 'images/%d.png' % batches_done, nrow=5, normalize=True)

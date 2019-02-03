@@ -4,7 +4,6 @@ import os
 import numpy as np
 import torch.nn as nn
 import torchvision.transforms as transforms
-from torch.autograd import Variable
 from torchvision.utils import save_image
 from torch.utils.data import DataLoader
 from torchvision import datasets
@@ -107,6 +106,7 @@ def data_loader(batch_size):
         batch_size=batch_size, shuffle=True)
     return dataloader
 
+
 # Set dataloader
 dataloader = data_loader(args.batch_size * args.k)
 
@@ -122,17 +122,18 @@ def main(args):
     for epoch in range(args.n_epochs):
         for i, (imgs, _) in enumerate(dataloader):
 
-            # Adversarial ground truths
-            valid = Variable(Tensor(args.batch_size, 1).fill_(1.0), requires_grad=False)
-            fake = Variable(Tensor(args.batch_size, 1).fill_(0.0), requires_grad=False)
+            with torch.no_grad():
+                # Adversarial ground truths
+                valid = Tensor(args.batch_size, 1).fill_(1.0)
+                fake = Tensor(args.batch_size, 1).fill_(0.0)
 
-            # Configure input, k * batch zise images in total
-            real_imgs_tensor = imgs.type(Tensor)
+                # Configure input, k * batch zise images in total
+                real_imgs_tensor = imgs.type(Tensor)
 
-            # Prepare at most k batches of real images
-            k_real_imgs = []
-            for k in range(int(len(real_imgs_tensor) / args.batch_size)):
-                k_real_imgs.append(Variable(real_imgs_tensor[k * args.batch_size: (k + 1) * args.batch_size]))
+                # Prepare at most k batches of real images
+                k_real_imgs = []
+                for k in range(int(len(real_imgs_tensor) / args.batch_size)):
+                    k_real_imgs.append(real_imgs_tensor[k * args.batch_size: (k + 1) * args.batch_size])
 
             # ---------------------
             #  Train Discriminator
@@ -142,7 +143,7 @@ def main(args):
             for real_imgs in k_real_imgs:
 
                 # Sample noise as generator input, then generate a batch of images
-                z = Variable(Tensor(np.random.normal(0, 1, (args.batch_size, args.latent_dim))))
+                z = Tensor(np.random.normal(0, 1, (args.batch_size, args.latent_dim)))
                 gen_imgs = generator(z)
 
                 # Measure discriminator's ability to classify real from generated samples
@@ -160,7 +161,7 @@ def main(args):
             # -----------------
 
             # Loss measures generator's ability to fool the discriminator
-            gen_imgs = generator(Variable(Tensor(np.random.normal(0, 1, (args.batch_size, args.latent_dim)))))
+            gen_imgs = generator(Tensor(np.random.normal(0, 1, (args.batch_size, args.latent_dim))))
             g_loss = adversarial_loss(discriminator(gen_imgs), valid)
 
             # Update generator
@@ -169,7 +170,7 @@ def main(args):
             GenUpdater.step()
 
             print("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (
-                epoch, args.n_epochs, i, len(dataloader), d_loss.data[0], g_loss.data[0]))
+                epoch, args.n_epochs, i, len(dataloader), d_loss.item(), g_loss.item()))
 
             batches_done = epoch * len(dataloader) + i
             if batches_done % args.sample_interval == 0:
