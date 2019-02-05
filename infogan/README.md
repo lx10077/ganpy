@@ -21,14 +21,15 @@ In practice, the mutual information term $I(c; G(z, c))$ is hard to maximize dir
 python cgan/cgan.py --n_epochs 200 --batch_size 64 --image_size 32 --latent_dim 62 --code_dim 2
 ```
 ## Results
+
 #### Disentangled Representation
 The following figure is referred from InfoGAN paper to show the disentangled representation power of InfoGAN.
 <p align="middle">
     <img src="images/infogan_paper_result.jpg"  />
 </p>
+
 #### Our Code Result
 The following images are all generated at iteration 184000. The left one shows the result of varying categorical latent variable by column. The right two images show the result of varying two continuous latent variables by row.
-
 <p align="middle">
     <img src="images/infogan_static_184000.png" width="250" />
     <img src="images/infogan_c1_184000.png" width="250" />
